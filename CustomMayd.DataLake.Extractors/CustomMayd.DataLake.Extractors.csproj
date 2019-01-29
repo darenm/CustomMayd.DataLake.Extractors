@@ -43,6 +43,8 @@
     <Reference Include="Microsoft.Analytics.Types" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ColumnDefinition.cs" />
+    <Compile Include="StartEndColumnExtractor.cs" />
     <Compile Include="FixedWidthExtractor.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

@@ -14,17 +14,20 @@ using Microsoft.Analytics.Types.Sql;
 namespace CustomMayd.DataLake.Extractors
 {
     [SqlUserDefinedExtractor]
-    public class FixedWidthExtractor : IExtractor
+
+    public class StartEndColumnExtractor : IExtractor
     {
-        private readonly SqlMap<string, string> _colWidths;
+        private readonly List<ColumnDefinition> _columnDefinitions;
+        private readonly bool _indexStartsAtZero;
         private readonly Encoding _encoding;
         private readonly byte[] _rowDelim;
 
-        public FixedWidthExtractor(SqlMap<string, string> colWidths, Encoding encoding = null, string rowDelim = "\r\n")
+        public StartEndColumnExtractor(List<ColumnDefinition> columnDefinitions, bool indexStartsAtZero = false, Encoding encoding = null, string rowDelim = "\r\n")
         {
+            _columnDefinitions = columnDefinitions;
+            _indexStartsAtZero = indexStartsAtZero;
             _encoding = encoding ?? Encoding.UTF8;
             _rowDelim = _encoding.GetBytes(rowDelim);
-            _colWidths = colWidths;
         }
 
         public override IEnumerable<IRow> Extract(IUnstructuredReader input, IUpdatableRow output)
@@ -33,16 +36,15 @@ namespace CustomMayd.DataLake.Extractors
                 using (var lineReader = new StreamReader(currentLine, _encoding))
                 {
                     var line = lineReader.ReadToEnd();
-                    //read new line of input
-                    var startParse = 0;
 
                     //for each column
                     var i = 0;
-                    foreach (var colWidth in _colWidths)
+                    foreach (var columnDefinition in _columnDefinitions)
                     {
+                        var startPos = columnDefinition.Start - (_indexStartsAtZero ? 0 : 1);
+                        var charsToRead = columnDefinition.End - (columnDefinition.Start - 1);
                         //read chars associated with fixed-width column
-                        var charsToRead = int.Parse(colWidth.Value);
-                        var value = line.Substring(startParse, charsToRead);
+                        var value = line.Substring(startPos, charsToRead);
 
 
                         //assign value to output (w/ appropriate type)
@@ -67,8 +69,6 @@ namespace CustomMayd.DataLake.Extractors
                                 throw new Exception("Unknown data type specified: " + output.Schema[i].Type.Name);
                         }
 
-                        //move to start of next column
-                        startParse += charsToRead;
                         i++;
                     }
 
