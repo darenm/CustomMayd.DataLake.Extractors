@@ -14,7 +14,6 @@ using Microsoft.Analytics.Types.Sql;
 namespace CustomMayd.DataLake.Extractors
 {
     [SqlUserDefinedExtractor]
-
     public class StartEndColumnExtractor : IExtractor
     {
         private readonly List<ColumnDefinition> _columnDefinitions;
@@ -51,7 +50,7 @@ namespace CustomMayd.DataLake.Extractors
                         switch (output.Schema[i].Type.Name)
                         {
                             case "String":
-                                output.Set(i, value);
+                                output.Set(i, value.Trim());
                                 break;
                             case "Int32":
                                 output.Set(i, int.Parse(value));
